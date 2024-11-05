@@ -36,10 +36,18 @@ class MiVentana(QMainWindow):
         validar = QIntValidator(0,100,self)
         self.tarjetas.setValidator(validar)
         self.isEditable = False
+        ruta_archivo_csv = None
+        nombre_carpeta = ""
+        # self.guardar.setEnabled(False)
+        if self.nombreColegio.text() == "Colegio":
+            self.guardar.setEnabled(False)
+        else:
+            self.guardar.setEnabled(True)
 
     def crearCarpetas(self):
         dialogo = CrearCarpetaDialog()
         dialogo.exec()
+        self.cargar_csv()
 
     def toggleEditMode(self):
         self.isEditable = not self.isEditable
@@ -119,13 +127,15 @@ class MiVentana(QMainWindow):
     def cargar_csv(self):
         self.tabla_egresados.setRowCount(0)
         nombre_archivo = QFileDialog.getOpenFileName(self, 'Abrir archivo', 'Escuelas', 'Archivos CSV (*.csv)')
+        if nombre_archivo:
+            self.ruta_archivo_csv = nombre_archivo
         if nombre_archivo[0]:
             with open(nombre_archivo[0], 'r', newline='', encoding='utf-8') as archivo:
                 lector = csv.reader(archivo)
                 carpeta_seleccionada = os.path.dirname(nombre_archivo[0])
-                nombre_carpeta = os.path.basename(carpeta_seleccionada)
+                self.nombre_carpeta = os.path.basename(carpeta_seleccionada)
 
-                self.nombreColegio.setText(nombre_carpeta)
+                self.nombreColegio.setText(self.nombre_carpeta)
                 for fila in lector:
 
                     self.tabla_egresados.insertRow(self.tabla_egresados.rowCount())
@@ -143,9 +153,13 @@ class MiVentana(QMainWindow):
                     valor_spinbox = int(fila[14]) if fila[14].isdigit() else 0
                     spin_box.setValue(valor_spinbox)
                     self.tabla_egresados.setCellWidget(self.tabla_egresados.rowCount() - 1, 14, spin_box)
-    
+        self.guardar.setEnabled(True)
+        self.abrirCarpeta.setEnabled(False)
+        self.crearCarpeta.setEnabled(False)
+
+
     def guardar_csv(self):
-        nombre_archivo, _ = QFileDialog.getSaveFileName(self, 'Guardar Archivo', 'Escuelas', 'Archivos CSV (*.csv)')
+        nombre_archivo, _ = QFileDialog.getSaveFileName(self, 'Guardar Archivo',f'Escuelas/{self.nombre_carpeta}/{self.nombre_carpeta}', 'Archivos CSV (*.csv)')
         
         if nombre_archivo:
             with open(nombre_archivo, 'w', newline='', encoding='utf-8') as archivo:
@@ -180,9 +194,11 @@ class MiVentana(QMainWindow):
 
                     # Escribir la fila en el archivo CSV
                     escritor.writerow(items)
+        self.abrirCarpeta.setEnabled(True)
+        self.crearCarpeta.setEnabled(True)
 
 
-
+    # if self.tabla_egresados.onChance 
 
 
 
