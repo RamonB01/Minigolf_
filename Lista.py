@@ -167,13 +167,20 @@ class MiVentana(QMainWindow):
                         else:
                             items.append("")
 
-                    # Columna 13 y 14: texto normal
-                    for col in [13, 14]:
-                        item = self.tabla_egresados.item(fila, col)
-                        items.append(item.text() if item else '')
+                    # Columna 13: texto normal
+                    item = self.tabla_egresados.item(fila, 13)
+                    items.append(item.text() if item else '')
+
+                    # Columna 14: QSpinBox
+                    spin_box = self.tabla_egresados.cellWidget(fila, 14)
+                    if isinstance(spin_box, QSpinBox):
+                        items.append(str(spin_box.value()))
+                    else:
+                        items.append('')
 
                     # Escribir la fila en el archivo CSV
                     escritor.writerow(items)
+
 
 
 
