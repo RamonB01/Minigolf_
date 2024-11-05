@@ -1,5 +1,5 @@
-from PyQt6.QtWidgets import QDialog,QSpinBox ,QLineEdit, QPushButton, QVBoxLayout , QMainWindow, QApplication, QTableWidgetItem, QMessageBox, QCheckBox, QFileDialog
-from PyQt6.QtGui import  QDoubleValidator
+from PyQt6.QtWidgets import QDialog, QSpinBox ,QLineEdit, QPushButton, QVBoxLayout , QMainWindow, QApplication, QTableWidgetItem, QMessageBox, QCheckBox, QFileDialog
+from PyQt6.QtGui import  QDoubleValidator, QIntValidator
 from PyQt6 import uic
 from PyQt6.QtCore import Qt
 import csv
@@ -33,7 +33,8 @@ class MiVentana(QMainWindow):
         self.editarBoton.clicked.connect(self.toggleEditMode)
         self.crearCarpeta.clicked.connect(self.crearCarpetas)
         self.guardar.clicked.connect(self.guardar_csv)
-
+        validar = QIntValidator(0,100,self)
+        self.tarjetas.setValidator(validar)
         self.isEditable = False
 
     def crearCarpetas(self):
@@ -76,8 +77,13 @@ class MiVentana(QMainWindow):
             mypEg = madreEg
         elif padresEg: 
             mypEg = padresEg
-            
+        spin_box = QSpinBox()
+        spin_box.setRange(0, 100)
         tarjetasEg = self.tarjetas.text()
+        if tarjetasEg:
+            spin_box.setValue(int(tarjetasEg))
+        else:
+            spin_box.setValue(0)
         checkbox1 = QCheckBox("")
         checkbox2 = QCheckBox("")
         checkbox3 = QCheckBox("")
@@ -108,7 +114,7 @@ class MiVentana(QMainWindow):
         self.tabla_egresados.setCellWidget(fila, 11, checkbox11)
         self.tabla_egresados.setCellWidget(fila, 12, checkbox12)
         self.tabla_egresados.setItem(fila, 13, QTableWidgetItem(f"{mypEg}"))
-        self.tabla_egresados.setItem(fila, 14, QTableWidgetItem(f"{tarjetasEg}"))
+        self.tabla_egresados.setCellWidget(fila, 14, spin_box)
 
     def cargar_csv(self):
         self.tabla_egresados.setRowCount(0)
@@ -132,7 +138,11 @@ class MiVentana(QMainWindow):
                         self.tabla_egresados.setCellWidget(self.tabla_egresados.rowCount() - 1, col, checkbox)
 
                     self.tabla_egresados.setItem(self.tabla_egresados.rowCount() - 1, 13, QTableWidgetItem(fila[13]))
-                    self.tabla_egresados.setItem(self.tabla_egresados.rowCount() - 1, 14, QTableWidgetItem(fila[14]))
+                    spin_box = QSpinBox()
+                    spin_box.setRange(0,100)
+                    valor_spinbox = int(fila[14]) if fila[14].isdigit() else 0
+                    spin_box.setValue(valor_spinbox)
+                    self.tabla_egresados.setCellWidget(self.tabla_egresados.rowCount() - 1, 14, spin_box)
     
     def guardar_csv(self):
         nombre_archivo, _ = QFileDialog.getSaveFileName(self, 'Guardar Archivo', 'Escuelas', 'Archivos CSV (*.csv)')
