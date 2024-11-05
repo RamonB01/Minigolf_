@@ -1,0 +1,9 @@
+<RCC>
+  <qresource prefix="imga">
+    <file>abrircarpeta.png</file>
+    <file>guardarcarpeta.png</file>
+    <file>nuevacarpeta.png</file>
+    <file>images.jpg</file>
+    <file>img.qrc</file>
+  </qresource>
+</RCC>
