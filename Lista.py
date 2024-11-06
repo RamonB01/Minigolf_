@@ -38,6 +38,7 @@ class MiVentana(QMainWindow):
         self.isEditable = False
         ruta_archivo_csv = None
         nombre_carpeta = ""
+        self.tabla_egresados.cellChanged.connect(self.on_table_change)
         # self.guardar.setEnabled(False)
         if self.nombreColegio.text() == "Colegio":
             self.guardar.setEnabled(False)
@@ -197,6 +198,10 @@ class MiVentana(QMainWindow):
         self.abrirCarpeta.setEnabled(True)
         self.crearCarpeta.setEnabled(True)
 
+    def on_table_change(self, row, column):
+        self.abrirCarpeta.setEnabled(False)
+        self.crearCarpeta.setEnabled(False)
+        self.guardar.setEnabled(True)
 
     # if self.tabla_egresados.onChance 
 
