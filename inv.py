@@ -37,7 +37,7 @@ class InvitadosDialog(QDialog):
         nombre_egresado = self.comboEgresado.currentText()
         if nombre_egresado and nombre_egresado != "Seleccione Egresado":
             filename = f"{nombre_egresado}.csv"
-            with open(filename, mode='w', newline='') as file:
+            with open(f"Escuelas/Normal/{filename}", mode='w', newline='') as file:
                 writer = csv.writer(file)
                 writer.writerow(["Invitado", "Retirada"])  # Encabezados
 

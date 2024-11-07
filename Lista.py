@@ -3,6 +3,8 @@ from PyQt6.QtGui import  QDoubleValidator, QIntValidator
 from PyQt6 import uic
 from PyQt6.QtCore import Qt
 # from inv import InvitadosDialog
+import os
+from PyQt6.QtWidgets import QDialog, QVBoxLayout, QLineEdit, QPushButton, QMessageBox
 import csv
 import os, os.path
 import datetime
@@ -46,6 +48,8 @@ class MiVentana(QMainWindow):
         if self.nombreColegio.text() == "Colegio":
             self.guardar.setEnabled(False)
             self.verInvitados.setEnabled(False)
+            self.editarBoton.setEnabled(False)
+            self.agregarBoton.setEnabled(False)
         else:
             self.guardar.setEnabled(True)
             self.verInvitados.setEnabled(True)
@@ -56,8 +60,8 @@ class MiVentana(QMainWindow):
         self.cargar_csv()
         
     def abrirInvitados(self):
-        # Crear instancia del diálogo de invitados
-        dialogo = InvitadosDialog()
+        dialogo = InvitadosDialog(nombre_carpeta=self.nombre_carpeta)
+        # dialogo = InvitadosDialog()
         
         # Limpiar y agregar nombres de egresados al comboEgresado
         nombres_egresados = []
@@ -168,6 +172,8 @@ class MiVentana(QMainWindow):
                     self.tabla_egresados.setCellWidget(self.tabla_egresados.rowCount() - 1, 14, spin_box)
         self.guardar.setEnabled(True)
         self.verInvitados.setEnabled(True)
+        self.agregarBoton.setEnabled(True)
+        self.editarBoton.setEnabled(True)
         self.abrirCarpeta.setEnabled(False)
         self.crearCarpeta.setEnabled(False)
 
@@ -241,8 +247,6 @@ class MiVentana(QMainWindow):
     #                     self.tabla_egresados.setItem(fila, column, item)
 
 
-import os
-from PyQt6.QtWidgets import QDialog, QVBoxLayout, QLineEdit, QPushButton, QMessageBox
 
 class CrearCarpetaDialog(QDialog):
     def __init__(self):
@@ -304,15 +308,15 @@ class CrearCarpetaDialog(QDialog):
 
 
 class InvitadosDialog(QDialog):
-    def __init__(self):
+    def __init__(self, nombre_carpeta):
         super().__init__()
         uic.loadUi("invitados.ui", self)
+        self.nombre_carpeta = nombre_carpeta  # Guarda el nombre de la carpeta
         self.agregarInvitado.clicked.connect(self.agregar_invitado)
         self.tabla_invitado.setColumnCount(2)
         self.tabla_invitado.setHorizontalHeaderLabels(["Invitado", "Retirada"])
-        self.tabla_invitado.setColumnWidth(0, 300)
+        self.tabla_invitado.setColumnWidth(0, 300)  
         self.tabla_invitado.setColumnWidth(1, 100)
-        
         self.guardarCSV.clicked.connect(self.guardar_en_csv)
 
     def cargar_egresados(self, nombres_egresados):
@@ -339,16 +343,25 @@ class InvitadosDialog(QDialog):
     def guardar_en_csv(self):
         nombre_egresado = self.comboEgresado.currentText()
         if nombre_egresado and nombre_egresado != "Seleccione Egresado":
-            filename = f"{nombre_egresado}.csv"
+            ruta_escuela = f"Escuelas/{self.nombre_carpeta}/Invitados"
+            os.makedirs(ruta_escuela, exist_ok=True)
+            filename = os.path.join(ruta_escuela, f"{nombre_egresado}.csv")
+            
+            # Guardar el contenido de la tabla en el archivo CSV
             with open(filename, mode='w', newline='') as file:
                 writer = csv.writer(file)
                 writer.writerow(["Invitado", "Retirada"])  # Encabezados
-
+                
+                # Escribir cada fila de la tabla en el archivo CSV
                 for row in range(self.tabla_invitado.rowCount()):
-                    nombre_invitado = self.tabla_invitado.item(row, 0).text()
-                    retirada = self.tabla_invitado.cellWidget(row, 1).isChecked()
+                    nombre_invitado = self.tabla_invitado.item(row, 0).text() if self.tabla_invitado.item(row, 0) else ""
+                    retirada = self.tabla_invitado.cellWidget(row, 1).isChecked() if self.tabla_invitado.cellWidget(row, 1) else False
                     writer.writerow([nombre_invitado, retirada])
+            
             print(f"Datos guardados en {filename}")
+        else:
+            QMessageBox.warning(self, "Error", "Seleccione un egresado válido para guardar los datos.")
+
 
 
 
