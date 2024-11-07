@@ -313,16 +313,32 @@
        <item>
         <layout class="QVBoxLayout" name="verticalLayout_3">
          <item>
-          <widget class="QLabel" name="nombreColegio">
-           <property name="font">
-            <font>
-             <pointsize>12</pointsize>
-            </font>
-           </property>
-           <property name="text">
-            <string>Colegio</string>
-           </property>
-          </widget>
+          <layout class="QHBoxLayout" name="horizontalLayout_8" stretch="8,2">
+           <item>
+            <widget class="QLabel" name="nombreColegio">
+             <property name="font">
+              <font>
+               <pointsize>12</pointsize>
+              </font>
+             </property>
+             <property name="text">
+              <string>Colegio</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="verInvitados">
+             <property name="font">
+              <font>
+               <pointsize>12</pointsize>
+              </font>
+             </property>
+             <property name="text">
+              <string>Ver Invitados</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
          </item>
          <item>
           <widget class="QTableWidget" name="tabla_egresados">

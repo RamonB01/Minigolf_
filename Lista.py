@@ -2,10 +2,12 @@ from PyQt6.QtWidgets import QDialog, QSpinBox ,QLineEdit, QPushButton, QVBoxLayo
 from PyQt6.QtGui import  QDoubleValidator, QIntValidator
 from PyQt6 import uic
 from PyQt6.QtCore import Qt
+# from inv import InvitadosDialog
 import csv
 import os, os.path
 import datetime
 import sys
+
 
 class MiVentana(QMainWindow):
     def __init__(self):
@@ -33,6 +35,7 @@ class MiVentana(QMainWindow):
         self.editarBoton.clicked.connect(self.toggleEditMode)
         self.crearCarpeta.clicked.connect(self.crearCarpetas)
         self.guardar.clicked.connect(self.guardar_csv)
+        self.verInvitados.clicked.connect(self.abrirInvitados)
         validar = QIntValidator(0,100,self)
         self.tarjetas.setValidator(validar)
         self.isEditable = False
@@ -42,13 +45,30 @@ class MiVentana(QMainWindow):
         # self.guardar.setEnabled(False)
         if self.nombreColegio.text() == "Colegio":
             self.guardar.setEnabled(False)
+            self.verInvitados.setEnabled(False)
         else:
             self.guardar.setEnabled(True)
+            self.verInvitados.setEnabled(True)
 
     def crearCarpetas(self):
         dialogo = CrearCarpetaDialog()
         dialogo.exec()
         self.cargar_csv()
+        
+    def abrirInvitados(self):
+        # Crear instancia del diálogo de invitados
+        dialogo = InvitadosDialog()
+        
+        # Limpiar y agregar nombres de egresados al comboEgresado
+        nombres_egresados = []
+        for row in range(self.tabla_egresados.rowCount()):
+            nombre_item = self.tabla_egresados.item(row, 0)
+            if nombre_item:
+                nombres_egresados.append(nombre_item.text())
+
+        dialogo.cargar_egresados(nombres_egresados)  # Llamar al método para cargar nombres en el diálogo
+        dialogo.exec()
+
 
     def toggleEditMode(self):
         self.isEditable = not self.isEditable
@@ -86,6 +106,19 @@ class MiVentana(QMainWindow):
             mypEg = madreEg
         elif padresEg: 
             mypEg = padresEg
+
+        # Crear la estructura de carpetas si no existe
+        ruta_escuela = os.path.join("Escuelas", self.nombre_carpeta)
+        ruta_invitados = os.path.join(ruta_escuela, "Invitados")
+        os.makedirs(ruta_invitados, exist_ok=True)
+
+        # Crear el archivo CSV para el egresado en la carpeta "Invitados"
+        ruta_csv = os.path.join(ruta_invitados, f"{nombreEg}.csv")
+        with open(ruta_csv, 'w', newline='', encoding='utf-8') as csv_file:
+            escritor = csv.writer(csv_file)
+            escritor.writerow(["Invitado", "Retirada"])  # Encabezado
+
+        # Agregar el resto de la lógica para insertar el egresado en la tabla (checkboxes, spinbox, etc.)
         spin_box = QSpinBox()
         spin_box.setRange(0, 100)
         tarjetasEg = self.tarjetas.text()
@@ -93,37 +126,16 @@ class MiVentana(QMainWindow):
             spin_box.setValue(int(tarjetasEg))
         else:
             spin_box.setValue(0)
-        checkbox1 = QCheckBox("")
-        checkbox2 = QCheckBox("")
-        checkbox3 = QCheckBox("")
-        checkbox4 = QCheckBox("")
-        checkbox5 = QCheckBox("")
-        checkbox6 = QCheckBox("")
-        checkbox7 = QCheckBox("")
-        checkbox8 = QCheckBox("")
-        checkbox9 = QCheckBox("")
-        checkbox10 = QCheckBox("")
-        checkbox11 = QCheckBox("")
-        checkbox12 = QCheckBox("")
+        checkboxes = [QCheckBox("") for _ in range(12)]
+        
         fila = self.tabla_egresados.rowCount()
         self.tabla_egresados.insertRow(fila) 
-        self.tabla_egresados.setItem(fila, 0, QTableWidgetItem(f"{nombreEg}"))
-        # self.tabla_egresados.setItem(fila, 1, QTableWidgetItem(f"{cuotasCant}"))
-        # self.tabla_egresados.setItem(fila, 1, QTableWidgetItem(f"{cuotasCant} {checkbox}" ))
-        self.tabla_egresados.setCellWidget(fila, 1, checkbox1)
-        self.tabla_egresados.setCellWidget(fila, 2, checkbox2)
-        self.tabla_egresados.setCellWidget(fila, 3, checkbox3)
-        self.tabla_egresados.setCellWidget(fila, 4, checkbox4)
-        self.tabla_egresados.setCellWidget(fila, 5, checkbox5)
-        self.tabla_egresados.setCellWidget(fila, 6, checkbox6)
-        self.tabla_egresados.setCellWidget(fila, 7, checkbox7)
-        self.tabla_egresados.setCellWidget(fila, 8, checkbox8)
-        self.tabla_egresados.setCellWidget(fila, 9, checkbox9)
-        self.tabla_egresados.setCellWidget(fila, 10, checkbox10)
-        self.tabla_egresados.setCellWidget(fila, 11, checkbox11)
-        self.tabla_egresados.setCellWidget(fila, 12, checkbox12)
-        self.tabla_egresados.setItem(fila, 13, QTableWidgetItem(f"{mypEg}"))
+        self.tabla_egresados.setItem(fila, 0, QTableWidgetItem(nombreEg))
+        for col, checkbox in enumerate(checkboxes, start=1):
+            self.tabla_egresados.setCellWidget(fila, col, checkbox)
+        self.tabla_egresados.setItem(fila, 13, QTableWidgetItem(mypEg))
         self.tabla_egresados.setCellWidget(fila, 14, spin_box)
+
 
     def cargar_csv(self):
         self.tabla_egresados.setRowCount(0)
@@ -155,6 +167,7 @@ class MiVentana(QMainWindow):
                     spin_box.setValue(valor_spinbox)
                     self.tabla_egresados.setCellWidget(self.tabla_egresados.rowCount() - 1, 14, spin_box)
         self.guardar.setEnabled(True)
+        self.verInvitados.setEnabled(True)
         self.abrirCarpeta.setEnabled(False)
         self.crearCarpeta.setEnabled(False)
 
@@ -228,6 +241,9 @@ class MiVentana(QMainWindow):
     #                     self.tabla_egresados.setItem(fila, column, item)
 
 
+import os
+from PyQt6.QtWidgets import QDialog, QVBoxLayout, QLineEdit, QPushButton, QMessageBox
+
 class CrearCarpetaDialog(QDialog):
     def __init__(self):
         super().__init__()
@@ -258,26 +274,82 @@ class CrearCarpetaDialog(QDialog):
         # Crear la carpeta "Escuelas" si no existe
         os.makedirs(ruta_escuelas, exist_ok=True)
 
-        # Definir la ruta completa para la nueva carpeta
+        # Definir la ruta completa para la nueva carpeta de la escuela
         ruta_nueva_carpeta = os.path.join(ruta_escuelas, nombre_carpeta)
 
         # Verificar si la carpeta ya existe
         if nombre_carpeta:  # Asegurarse de que el nombre no esté vacío
             if not os.path.exists(ruta_nueva_carpeta):
-                # Crear la nueva carpeta
+                # Crear la nueva carpeta de la escuela
                 os.makedirs(ruta_nueva_carpeta)
-                QMessageBox.information(self, "Éxito", f"Carpeta '{nombre_carpeta}' creada en '{ruta_escuelas}'")
+                
+                # Crear la subcarpeta "Invitados" dentro de la carpeta de la escuela
+                ruta_invitados = os.path.join(ruta_nueva_carpeta, "Invitados")
+                os.makedirs(ruta_invitados)
 
-                # Aquí está el nuevo código agregado para crear el archivo CSV
+                # Mensaje de éxito
+                QMessageBox.information(self, "Éxito", f"Carpeta '{nombre_carpeta}' y su carpeta 'Invitados' creadas en '{ruta_escuelas}'")
+
+                # Crear un archivo CSV vacío en la carpeta de la escuela
                 ruta_csv = os.path.join(ruta_nueva_carpeta, f"{nombre_carpeta}.csv")
                 with open(ruta_csv, 'w', newline='', encoding='utf-8') as csv_file:
-                    pass  # Crea un archivo vacío
+                    pass  # Crea un archivo CSV vacío
 
                 self.accept()  # Cerrar el diálogo con éxito
             else:
                 QMessageBox.warning(self, "Error", f"La carpeta '{nombre_carpeta}' ya existe en '{ruta_escuelas}'")
         else:
             QMessageBox.warning(self, "Error", "Por favor, ingrese un nombre válido para la carpeta.")
+
+
+
+class InvitadosDialog(QDialog):
+    def __init__(self):
+        super().__init__()
+        uic.loadUi("invitados.ui", self)
+        self.agregarInvitado.clicked.connect(self.agregar_invitado)
+        self.tabla_invitado.setColumnCount(2)
+        self.tabla_invitado.setHorizontalHeaderLabels(["Invitado", "Retirada"])
+        self.tabla_invitado.setColumnWidth(0, 300)
+        self.tabla_invitado.setColumnWidth(1, 100)
+        
+        self.guardarCSV.clicked.connect(self.guardar_en_csv)
+
+    def cargar_egresados(self, nombres_egresados):
+        # Vacía el combobox y añade los nombres de egresados
+        self.comboEgresado.clear()
+        self.comboEgresado.addItem("Seleccione Egresado")  # Opción por defecto
+        self.comboEgresado.addItems(nombres_egresados)
+
+
+    def agregar_invitado(self):
+        nombre = self.inputInvitado.text()
+        if nombre:
+            row = self.tabla_invitado.rowCount()
+            self.tabla_invitado.insertRow(row)
+            
+            # Agrega el nombre del invitado
+            self.tabla_invitado.setItem(row, 0, QTableWidgetItem(nombre))
+            
+            # Agrega el checkbox para "Retirada"
+            checkbox = QCheckBox()
+            self.tabla_invitado.setCellWidget(row, 1, checkbox)
+            self.inputInvitado.clear()  # Limpia el campo de texto
+
+    def guardar_en_csv(self):
+        nombre_egresado = self.comboEgresado.currentText()
+        if nombre_egresado and nombre_egresado != "Seleccione Egresado":
+            filename = f"{nombre_egresado}.csv"
+            with open(filename, mode='w', newline='') as file:
+                writer = csv.writer(file)
+                writer.writerow(["Invitado", "Retirada"])  # Encabezados
+
+                for row in range(self.tabla_invitado.rowCount()):
+                    nombre_invitado = self.tabla_invitado.item(row, 0).text()
+                    retirada = self.tabla_invitado.cellWidget(row, 1).isChecked()
+                    writer.writerow([nombre_invitado, retirada])
+            print(f"Datos guardados en {filename}")
+
 
 
 
