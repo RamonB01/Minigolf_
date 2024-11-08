@@ -9,12 +9,31 @@ import csv
 import os, os.path
 import datetime
 import sys
+from PyQt6.QtCore import QCoreApplication
+from PyQt6.uic import loadUi
 
+
+if getattr(sys, 'frozen', False):
+    base_path = sys._MEIPASS
+else:
+    base_path = os.path.abspath(".")
+
+# Cargar el archivo .ui usando la ruta calculada
+ui_path = os.path.join(base_path, 'gui', 'lista_egresado.ui')
 
 class MiVentana(QMainWindow):
     def __init__(self):
         super().__init__()
-        uic.loadUi("lista_egresado.ui", self)
+        uic.loadUi("gui/lista_egresado.ui", self)
+        
+        # if getattr(sys, 'frozen', False):
+        # # Si está ejecutándose desde un ejecutable
+        #     ui_path = os.path.join(sys._MEIPASS, 'gui', 'lista_egresado.ui')
+        # else:
+        #     # Si está ejecutándose desde el código fuente
+        #     ui_path = 'gui/lista_egresado.ui'
+
+        # loadUi(ui_path, self)
         
         self.setWindowIcon(QIcon("img/lista.png"))
         self.agregarBoton.clicked.connect(self.agregarBorrar)
@@ -311,7 +330,7 @@ class InvitadosDialog(QDialog):
 
     def __init__(self, nombre_carpeta):
         super().__init__()
-        uic.loadUi("invitados.ui", self)
+        uic.loadUi("gui/invitados.ui", self)
         self.nombre_carpeta = nombre_carpeta
         self.setWindowIcon(QIcon("img/lista.png"))
         self.agregarInvitado.clicked.connect(self.agregar_invitado)
