@@ -1,5 +1,5 @@
 from PyQt6.QtWidgets import QDialog, QSpinBox ,QLineEdit, QPushButton, QVBoxLayout , QMainWindow, QApplication, QTableWidgetItem, QMessageBox, QCheckBox, QFileDialog
-from PyQt6.QtGui import  QDoubleValidator, QIntValidator
+from PyQt6.QtGui import  QDoubleValidator, QIntValidator, QIcon
 from PyQt6 import uic
 from PyQt6.QtCore import Qt
 # from inv import InvitadosDialog
@@ -16,6 +16,7 @@ class MiVentana(QMainWindow):
         super().__init__()
         uic.loadUi("lista_egresado.ui", self)
         
+        self.setWindowIcon(QIcon("img/lista.png"))
         self.agregarBoton.clicked.connect(self.agregarBorrar)
         
         self.tabla_egresados.setColumnWidth(0, 300)
@@ -306,39 +307,57 @@ class CrearCarpetaDialog(QDialog):
             QMessageBox.warning(self, "Error", "Por favor, ingrese un nombre válido para la carpeta.")
 
 
-
 class InvitadosDialog(QDialog):
+
     def __init__(self, nombre_carpeta):
         super().__init__()
         uic.loadUi("invitados.ui", self)
-        self.nombre_carpeta = nombre_carpeta  # Guarda el nombre de la carpeta
+        self.nombre_carpeta = nombre_carpeta
+        self.setWindowIcon(QIcon("img/lista.png"))
         self.agregarInvitado.clicked.connect(self.agregar_invitado)
+        self.guardarCSV.clicked.connect(self.guardar_en_csv)
+        self.comboEgresado.currentIndexChanged.connect(self.cargar_invitados)
+
+        # Configuración de la tabla
         self.tabla_invitado.setColumnCount(2)
         self.tabla_invitado.setHorizontalHeaderLabels(["Invitado", "Retirada"])
         self.tabla_invitado.setColumnWidth(0, 300)  
         self.tabla_invitado.setColumnWidth(1, 100)
-        self.guardarCSV.clicked.connect(self.guardar_en_csv)
 
     def cargar_egresados(self, nombres_egresados):
-        # Vacía el combobox y añade los nombres de egresados
         self.comboEgresado.clear()
-        self.comboEgresado.addItem("Seleccione Egresado")  # Opción por defecto
+        self.comboEgresado.addItem("Seleccione Egresado")
         self.comboEgresado.addItems(nombres_egresados)
 
+    def cargar_invitados(self):
+        # Limpia la tabla
+        self.tabla_invitado.setRowCount(0)
+        
+        nombre_egresado = self.comboEgresado.currentText()
+        if nombre_egresado and nombre_egresado != "Seleccione Egresado":
+            ruta_archivo = f"Escuelas/{self.nombre_carpeta}/Invitados/{nombre_egresado}.csv"
+            
+            if os.path.exists(ruta_archivo):
+                with open(ruta_archivo, mode='r') as file:
+                    reader = csv.reader(file)
+                    next(reader)  # Salta los encabezados
+                    for row_data in reader:
+                        self._agregar_fila_invitado(row_data[0], row_data[1] == "True")
+
+    def _agregar_fila_invitado(self, nombre, retirada):
+        row = self.tabla_invitado.rowCount()
+        self.tabla_invitado.insertRow(row)
+        self.tabla_invitado.setItem(row, 0, QTableWidgetItem(nombre))
+        
+        checkbox = QCheckBox()
+        checkbox.setChecked(retirada)
+        self.tabla_invitado.setCellWidget(row, 1, checkbox)
 
     def agregar_invitado(self):
         nombre = self.inputInvitado.text()
         if nombre:
-            row = self.tabla_invitado.rowCount()
-            self.tabla_invitado.insertRow(row)
-            
-            # Agrega el nombre del invitado
-            self.tabla_invitado.setItem(row, 0, QTableWidgetItem(nombre))
-            
-            # Agrega el checkbox para "Retirada"
-            checkbox = QCheckBox()
-            self.tabla_invitado.setCellWidget(row, 1, checkbox)
-            self.inputInvitado.clear()  # Limpia el campo de texto
+            self._agregar_fila_invitado(nombre, False)
+            self.inputInvitado.clear()
 
     def guardar_en_csv(self):
         nombre_egresado = self.comboEgresado.currentText()
@@ -347,12 +366,10 @@ class InvitadosDialog(QDialog):
             os.makedirs(ruta_escuela, exist_ok=True)
             filename = os.path.join(ruta_escuela, f"{nombre_egresado}.csv")
             
-            # Guardar el contenido de la tabla en el archivo CSV
             with open(filename, mode='w', newline='') as file:
                 writer = csv.writer(file)
-                writer.writerow(["Invitado", "Retirada"])  # Encabezados
+                writer.writerow(["Invitado", "Retirada"])
                 
-                # Escribir cada fila de la tabla en el archivo CSV
                 for row in range(self.tabla_invitado.rowCount()):
                     nombre_invitado = self.tabla_invitado.item(row, 0).text() if self.tabla_invitado.item(row, 0) else ""
                     retirada = self.tabla_invitado.cellWidget(row, 1).isChecked() if self.tabla_invitado.cellWidget(row, 1) else False

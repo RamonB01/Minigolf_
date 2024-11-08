@@ -4,6 +4,7 @@
     <file>guardarcarpeta.png</file>
     <file>nuevacarpeta.png</file>
     <file>images.jpg</file>
+    <file>lista.png</file>
     <file>img.qrc</file>
   </qresource>
 </RCC>
